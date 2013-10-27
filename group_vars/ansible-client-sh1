@@ -1,0 +1,11 @@
+splunk_pkg_url: http://releases.splunk.com/cgi-bin/splunk_build_fetcher.py?PLAT_PKG=Linux-x86_64.tgz&DELIVER_AS=file&VERSION=5.0.6
+splunk_home_sh1: /home/eserv/sh1/splunk
+splunk_home_sh1_parent: /home/eserv/sh1
+splunk_cmd_sh1:  /home/eserv/sh1/splunk/bin/splunk
+server_conf: ${splunk_home_sh1}/etc/system/default/server.conf
+web_conf: ${splunk_home_sh1}/etc/system/default/web.conf
+props_conf: ${splunk_home_sh1}/etc/system/default/props.conf
+splunk_server1: qa-sv-rh61x64-8.sv.splunk.com
+
+# Here are variables related to the Tomcat installation
+splunkd_port: 9998

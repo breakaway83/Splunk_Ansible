@@ -1,0 +1,11 @@
+[ansible-server] 
+127.0.0.1
+
+[ansible-client-sh1]
+qa-sv-rh61x64-10
+
+[ansible-client-peer1]
+qa-sv-rh61x64-8.sv.splunk.com
+
+[ansible-client-peer2]
+qa-sv-rh61x64-6.sv.splunk.com 
