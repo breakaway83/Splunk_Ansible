@@ -1,0 +1,6 @@
+P4ENV:
+    P4USER: bamboo
+    P4PASSWD: symantec
+    P4CLIENT: qa-sv-rh61x64-5_bamboo
+
+inventory_host: qa-sv-rh61x64-8.sv.splunk.com

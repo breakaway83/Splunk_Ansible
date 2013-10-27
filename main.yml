@@ -1,3 +1,13 @@
+- hosts: ansible-server
+
+  tasks:
+  - name: p4 sync
+    shell: p4 sync //splunk/current/test/data/...
+    environment: P4ENV
+
+  - name: copy directory from local to remote
+    local_action: command rsync -a /home/eserv/perforce/splunk/current $inventory_host:/home/eserv/perforce/splunk
+
 - hosts: ansible-client-peer1
 
   tasks:
@@ -79,7 +89,7 @@
 
   - name: start splunk
     command: ${splunk_cmd_sh1} start --accept-license --answer-yes --auto-ports removes=${splunk_cmd_sh1}
-    register: start_splunk_outpuplunk pkg
+    register: start_splunk_outpuplunk
 
   - name: set search-server
     shell: ${splunk_cmd_sh1} add search-server ${splunk_server1}:9998 -remoteUsername admin -remotePassword changeme -auth admin:changeme
