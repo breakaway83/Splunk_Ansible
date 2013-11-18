@@ -1,0 +1,10 @@
+splunk_pkg_url: http://releases.splunk.com/cgi-bin/splunk_build_fetcher.py?PLAT_PKG=SunOS-x86_64.tar.Z&DELIVER_AS=file&VERSION=6.1&UF=0
+splunk_home_master: /export/home/eserv/master/splunk
+splunk_home_master_parent: /export/home/eserv/master
+splunk_cmd_master:  /export/home/eserv/master/splunk/bin/splunk
+server_conf: ${splunk_home_master}/etc/system/default/server.conf
+default_web_conf: ${splunk_home_master}/etc/system/default/web.conf
+local_web_conf: ${splunk_home_master}/etc/system/local/web.conf
+props_conf: ${splunk_home_master}/etc/system/default/props.conf
+splunk_slave: qa-sv-centos63x64-01.sv.splunk.com
+splunkd_port: 9998

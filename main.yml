@@ -8,33 +8,27 @@
   - name: copy directory from local to remote
     local_action: command rsync -a /home/eserv/perforce/splunk/current $inventory_host:/home/eserv/perforce/splunk
 
-- hosts: ansible-client-peer1
+- hosts: ansible-client-slave
 
   tasks:
   - name: stop splunk
-    command: ${splunk_cmd} stop removes=${splunk_cmd}
+    command: ${splunk_cmd_slave} stop -f removes=${splunk_cmd_slave}
     ignore_errors: true
 
-  - name: delete splunk_home_peer1
-    file: path=${splunk_home_peer1} state=absent
+  - name: delete splunk_home_slave - step 1
+    file: path=${splunk_home_slave} state=absent
+
+  - name: delete splunk_home_slave - step 2
+    command: rm -rf ${splunk_home_slave} removes=${splunk_home_slave}
 
   - name: get splunk pkg
     get_url: dest=/tmp/splunk.tgz force=yes url=${splunk_pkg_url}
 
+  - name: create ${splunk_home_slave_parent} directory
+    command: mkdir -p ${splunk_home_slave_parent} creates=${splunk_home_slave_parent}
+
   - name: extract splunk pkg
-    command: tar xzf /tmp/splunk.tgz chdir=${splunk_home_peer1_parent} creates=${splunk_cmd_peer1}
-
-  - name: chmod 0644 ${server_conf}
-    file: path=${server_conf} mode=0644
-
-  - name: enable admin login in ${server_conf}
-    lineinfile: dest=${server_conf} regexp='allowRemoteLogin=' line='allowRemoteLogin = always' state=present
-
-  - name: disable splunkweb in ${web_conf}
-    lineinfile: dest=${web_conf} regexp='startwebserver\s=' line='startwebserver = 0' state=present
-
-  - name: change default splunkd-port in ${web_conf}
-    lineinfile: dest=${web_conf} regexp='mgmtHostPort\s=' line='mgmtHostPort = 127.0.0.1:9998' state=present
+    command: tar xzf /tmp/splunk.tgz chdir=${splunk_home_slave_parent} creates=${splunk_cmd_slave}
 
   - name: chmod 0644 ${props_conf}
     file: path=${props_conf} mode=0644
@@ -43,40 +37,8 @@
     lineinfile: dest=${props_conf} regexp='DATETIME_CONFIG\s=\s/etc/datetime.xml' line='DATETIME_CONFIG = CURRENT' state=present
 
   - name: start splunk
-    command: ${splunk_cmd_peer1} start --accept-license --answer-yes --auto-ports removes=${splunk_cmd_peer1}
+    command: ${splunk_cmd_slave} start --accept-license --answer-yes --auto-ports removes=${splunk_cmd_slave}
     register: start_splunk_output
-
-  - name: display splunk start output
-    shell: echo ${start_splunk_output}
-    when: start_splunk_output
-
-  - name: save splunkd-port
-    shell: ${splunk_cmd_peer1} show splunkd-port -auth admin:changeme >> ./splunkd-port.txt creates=${splunk_cmd_peer1}
-
-  - name: stdout splunkd-port
-    shell: ${splunk_cmd_peer1} show splunkd-port -auth admin:changeme
-    register: splunkd_port
-
-  - shell: echo "splunk show splunkd-port works"
-    when: splunkd_port.stdout.find('9998') != -1
-
-
-- hosts: ansible-client-sh1
-
-  tasks:
-
-  - name: stop splunk
-    command: ${splunk_cmd_sh1} stop removes=${splunk_cmd}
-    ignore_errors: true
-
-  - name: delete splunk_home_sh1
-    file: path=${splunk_home_sh1} state=absent
-
-  - name: get splunk pkg
-    get_url: dest=/tmp/splunk.tgz force=yes url=${splunk_pkg_url}
-
-  - name: extract splunk pkg
-    command: tar xzf /tmp/splunk.tgz chdir=${splunk_home_sh1_parent} creates=${splunk_cmd_sh1}
 
   - name: chmod 0644 ${server_conf}
     file: path=${server_conf} mode=0644
@@ -84,12 +46,85 @@
   - name: enable admin login in ${server_conf}
     lineinfile: dest=${server_conf} regexp='allowRemoteLogin=' line='allowRemoteLogin = always' state=present
 
+  - name: disable splunkweb in ${default_web_conf}
+    lineinfile: dest=${default_web_conf} regexp='startwebserver\s=' line='startwebserver = 0' state=present
+
+  - name: change default splunkd-port in ${default_web_conf}
+    lineinfile: dest=${default_web_conf} regexp='mgmtHostPort\s=' line='mgmtHostPort = 127.0.0.1:9998' state=present
+
+  - name: delete ${local_web_conf}
+    file: path=${local_web_conf} state=absent
+
+  - name: restart splunk
+    command: ${splunk_cmd_slave} restart --answer-yes removes=${splunk_cmd_slave}
+    register: start_splunk_output
+
+  - name: display splunk start output
+    shell: echo ${start_splunk_output}
+    when: start_splunk_output
+
+  - name: save splunkd-port
+    shell: ${splunk_cmd_slave} show splunkd-port -auth admin:changeme >> ./splunkd-port.txt creates=${splunk_cmd_slave}
+
+  - name: stdout splunkd-port
+    shell: ${splunk_cmd_slave} show splunkd-port -auth admin:changeme
+    register: splunkd_port
+
+  - shell: echo "splunk show splunkd-port works"
+    when: splunkd_port.stdout.find('9998') != -1
+
+
+- hosts: ansible-client-master
+
+  tasks:
+
+  - name: stop splunk
+    command: ${splunk_cmd_master} stop -f removes=${splunk_cmd_master}
+    ignore_errors: true
+
+  - name: delete splunk_home_master - step 1
+    file: path=${splunk_home_master} state=absent
+
+  - name: delete splunk_home_master - step 2
+    command: rm -rf ${splunk_home_master} removes=${splunk_home_master}
+
+  - name: get splunk pkg
+    get_url: dest=/tmp/splunk.tar.Z force=yes url=${splunk_pkg_url}
+
+  - name: create ${splunk_home_master_parent} directory
+    command: mkdir -p ${splunk_home_master_parent} creates=${splunk_home_master_parent}
+
+  - name: extract splunk pkg
+    command: /usr/sfw/bin/gtar xzf /tmp/splunk.tar.Z chdir=${splunk_home_master_parent} creates=${splunk_cmd_master}
+
   - name: chmod 0644 ${props_conf}
     file: path=${props_conf} mode=0644
 
+  - name: set DATETIME_CONFIG = CURRENT in ${props_conf}
+    lineinfile: dest=${props_conf} regexp='DATETIME_CONFIG\s=\s/etc/datetime.xml' line='DATETIME_CONFIG = CURRENT' state=present
+
   - name: start splunk
-    command: ${splunk_cmd_sh1} start --accept-license --answer-yes --auto-ports removes=${splunk_cmd_sh1}
-    register: start_splunk_outpuplunk
+    command: ${splunk_cmd_master} start --accept-license --answer-yes --auto-ports removes=${splunk_cmd_master}
+    register: start_splunk_output
+
+  - name: chmod 0644 ${server_conf}
+    file: path=${server_conf} mode=0644
+
+  - name: enable admin login in ${server_conf}
+    lineinfile: dest=${server_conf} regexp='allowRemoteLogin=' line='allowRemoteLogin = always' state=present
+
+  - name: disable splunkweb in ${default_web_conf}
+    lineinfile: dest=${default_web_conf} regexp='startwebserver\s=' line='startwebserver = 0' state=present
+
+  - name: change default splunkd-port in ${default_web_conf}
+    lineinfile: dest=${default_web_conf} regexp='mgmtHostPort\s=' line='mgmtHostPort = 127.0.0.1:9998' state=present
+
+  - name: delete ${local_web_conf}
+    file: path=${local_web_conf} state=absent
+
+  - name: restart splunk
+    command: ${splunk_cmd_master} restart --answer-yes removes=${splunk_cmd_master}
+    register: start_splunk_output
 
   - name: set search-server
-    shell: ${splunk_cmd_sh1} add search-server ${splunk_server1}:9998 -remoteUsername admin -remotePassword changeme -auth admin:changeme
+    shell: ${splunk_cmd_master} add search-server ${splunk_slave}:9998 -remoteUsername admin -remotePassword changeme -auth admin:changeme

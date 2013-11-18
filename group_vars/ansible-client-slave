@@ -1,0 +1,9 @@
+splunk_pkg_url: http://releases.splunk.com/cgi-bin/splunk_build_fetcher.py?PLAT_PKG=Linux-x86_64.tgz&DELIVER_AS=file&VERSION=6.1&UF=0
+splunk_home_slave: /home/eserv/slave/splunk
+splunk_home_slave_parent: /home/eserv/slave
+splunk_cmd_slave:  /home/eserv/slave/splunk/bin/splunk
+server_conf: ${splunk_home_slave}/etc/system/default/server.conf
+default_web_conf: ${splunk_home_slave}/etc/system/default/web.conf
+local_web_conf: ${splunk_home_slave}/etc/system/local/web.conf
+props_conf: ${splunk_home_slave}/etc/system/default/props.conf
+splunkd_port: 9998
